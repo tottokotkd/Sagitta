@@ -1,0 +1,36 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: mono:latest
+    steps:
+      - checkout
+      - run:
+          name: install deps
+          command: |
+            apt update
+            apt install -y \
+              git \
+              unzip \
+              wget \
+              ;
+      - run:
+          name: install netlify cli 
+          command: |
+            wget -qO- 'https://cli.netlify.com/download/latest/linux' | tar xz
+      - run:
+          name: install DocFX
+          command: |
+            wget https://github.com/dotnet/docfx/releases/download/v2.39.1/docfx.zip
+            mkdir docfx
+            unzip -d docfx docfx.zip
+      - run:
+          name: build DocFX
+          command: mono ./docfx/docfx.exe ./Source/Sagitta.Docs/docfx.json
+      - run:
+          name: publish documents
+          command: |
+            ./netlifyctl deploy \
+              --publish-directory ./docs/ \
+              --site-id $NETLIFY_SITE_ID \
+              --access-token $NETLIFY_TOKEN
